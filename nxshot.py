@@ -74,7 +74,7 @@ def checkFolders(filelist):
 
         outputfolder.mkdir(parents=True, exist_ok=True)
 
-        newfile = copy(mediapath, outputfolder)
+        newfile = copy(str(mediapath), str(outputfolder))
 
         os.utime(newfile, (posixtimestamp, posixtimestamp))
 
