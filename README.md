@@ -9,9 +9,9 @@ Positional arguments:
 
 >FILEPATH:    "Nintendo/Album" folder from your SD card.
 
-Organized and tagged files are copied to ``SD:Nintendo/Album/Organized`` in a folder with the game's name.
+Organized and tagged files are copied to ``../Nintendo/Album/Organized`` in a folder with the game's name.
 
-If some of your screenshots end up being copied to ``SD:Nintendo/Album/Organized/Unknown``, please open an issue with the game id from the screenshot filename so that I can update the gameid list.
+If some of your screenshots end up being copied to ``../Nintendo/Album/Organized/Unknown``, please open an issue with the game id from the screenshot filename so that I can update the gameid list.
 
 ## Current gameid list
           '8AEDFF741E2D23FBED39474178692DAF':'Super Mario Odyssey'
