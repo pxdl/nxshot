@@ -51,3 +51,7 @@ If some of your screenshots end up being copied to ``../Nintendo/Album/Organized
           '28D351544DC829EEBE54E53AF29EB030': 'PAN-PAN'
           
           '412E0591DD033E78737A4B6DC2C70E50': 'ARMS Global Testpunch'
+          
+## Help
+
+If you have any questions, feel free to send me a tweet [**@Some1CP**](https://twitter.com/Some1CP).
