@@ -53,18 +53,25 @@ def checkFolders(filelist):
         second = mediapath.stem[12:14]
         gameid = mediapath.stem[17:]
 
-        #print("Game ID: {}".format(checkID(gameid,idname)))
-        #print("{}:{}:{}".format(hour, minute, second))
-        time = datetime(
-                        int(year),
-                        int(month),
-                        int(day),
-                        hour=int(hour),
-                        minute=int(minute),
-                        second=int(second))
+        try:
+            time = datetime(
+                            int(year),
+                            int(month),
+                            int(day),
+                            hour=int(hour),
+                            minute=int(minute),
+                            second=int(second))
+            pass
+        except ValueError:
+            print(
+                'Invalid filename for media {}: {}'.format(
+                                                        current,
+                                                        str(mediapath.stem)
+                                                        )
+                )
+            continue
+
         posixtimestamp = time.timestamp()
-        #print(time)
-        #print(posixtimestamp)
 
         outputfolder = args.filepath.joinpath('Organized', checkID(gameid,idname))
 
