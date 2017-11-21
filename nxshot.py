@@ -30,11 +30,7 @@ parser.add_argument(
     help='"Nintendo/Album" folder from your SD card.')
 
 # If there are arguments, parse them. If not, exit
-if (len(sys.argv) > 1):
-    args = parser.parse_args()
-else:
-    print('No folder specified! Exitting...')
-    sys.exit()
+args = parser.parse_args()
 
 
 def checkID(gameid, idname):
