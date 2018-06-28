@@ -5,18 +5,16 @@ import json
 from pathlib import Path
 from datetime import datetime
 from shutil import copy
+from Crypto.Cipher import AES
+from Crypto.Util import Padding
+import hashlib
+from urllib.request import urlopen
+from urllib.error import URLError
+from bs4 import BeautifulSoup
 
-
-# Load game ids and their names from external file
-try:
-    with open('gameids.json', 'r') as idfile:
-            idname = json.load(idfile)
-except FileNotFoundError:
-    print('Game ID list (gameids.json) not found! Exitting...')
-    sys.exit()
-except json.decoder.JSONDecodeError:
-    print('Invalid JSON format! Exitting...')
-    sys.exit()
+keyhash = "24e0dc62a15c11d38b622162ea2b4383"
+updated = 0
+idname = {}
 
 # Argument parser
 parser = argparse.ArgumentParser(
@@ -31,6 +29,64 @@ parser.add_argument(
 
 # If there are arguments, parse them. If not, exit
 args = parser.parse_args()
+
+def loadKey(filename, keyhash):
+    try:
+        with open(filename, 'r') as keyfile:
+                keystring = keyfile.read(32)
+                key = bytes.fromhex(keystring)
+                if(hashlib.md5(key).hexdigest() not in keyhash):
+                    raise ValueError("Keys don't match!")
+                return key
+                
+    except FileNotFoundError:
+        print("Decryption key (key.txt) not found!")
+    except ValueError:
+        print("Decryption key (key.txt) doesn't match!")
+
+
+def updateGameIDs():
+    key = loadKey('key.txt', keyhash)
+    if not key:
+        return -1
+
+    wiki = 'http://switchbrew.org/index.php?title=Title_list/Games'
+    try:
+        wikipage = urlopen(wiki)
+    except URLError:
+        print("Could not update gameids!")
+        return -1
+
+    wikisoup = BeautifulSoup(wikipage, 'html.parser')
+    gametable = wikisoup.find('table', {"class" : "wikitable sortable" })
+    gametabler = gametable.find_all('tr')
+
+    cipher = AES.new(key, AES.MODE_ECB)
+    
+    for row in gametabler[1:]:
+        titleid = row.contents[1].contents[0][1:]
+        gamename = row.contents[3].contents[0][1:-1]
+        region = row.contents[5].contents[0][1:-1]
+
+        #print('TitleID = {}'.format(titleid))
+
+        titleidb = bytes.fromhex(titleid)
+        titleidb = titleidb[7::-1]
+        conversion = titleidb.hex()
+        conversion = conversion.ljust(32, '0')
+        titleidb = bytes.fromhex(conversion)
+        encrypted = cipher.encrypt(titleidb)
+        screenshotid = encrypted.hex().upper()
+
+        #print("ScreenshotID = {}".format(encrypted.hex()))
+        idname[screenshotid] = gamename + ' (' + region + ')'
+
+    with open('gameids.json', 'w', encoding='utf-8') as idfile:
+            json.dump(idname, idfile, ensure_ascii=False, indent=4, sort_keys=True)
+            print("Successfully updated Game IDs")
+
+    return 1
+
 
 
 def checkID(gameid, idname):
@@ -85,6 +141,24 @@ def checkFolders(filelist):
 
         print('Organized {} of {} files.'.format(current, length))
 
+
+# Load game ids and their names from external file
+try:
+    with open('gameids.json', 'r', encoding='utf-8') as idfile:
+            idname = json.load(idfile)
+except FileNotFoundError:
+    print('Game ID list (gameids.json) not found! Fetching from Switchbrew...')
+    updated = updateGameIDs()
+    if updated < 0:
+        sys.exit()
+except json.decoder.JSONDecodeError:
+    print('Invalid JSON format! Fetching from Switchbrew...')
+    updated = updateGameIDs()
+    if updated < 0:
+        sys.exit()
+
+if not updated:
+    updateGameIDs()
 
 albumfolder = args.filepath
 
