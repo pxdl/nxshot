@@ -68,6 +68,9 @@ def updateGameIDs():
         gamename = row.contents[3].contents[0][1:-1]
         region = row.contents[5].contents[0][1:-1]
 
+        if ":" in gamename:
+            gamename = gamename.replace(":", " -")
+
         #print('TitleID = {}'.format(titleid))
 
         titleidb = bytes.fromhex(titleid)
