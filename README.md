@@ -8,7 +8,7 @@ Automatically organize and timestamp your Nintendo Switch captures
 
 * ``pip install BeautifulSoup4``
 
-* (Optional) Screenshot key as ``key.txt`` on the same folder as nxshot for automatic updating. Hash: ``24e0dc62a15c11d38b622162ea2b4383``
+* (Optional) Key at offset 0x71000704D0 from the capsrv NSO loaded up in IDA as ``key.txt`` on the same folder as nxshot for automatic updating. Hash: ``24e0dc62a15c11d38b622162ea2b4383``
 
 ## Usage
 
