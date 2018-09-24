@@ -38,7 +38,7 @@ def loadKey(filename, keyhash):
                 if(hashlib.md5(key).hexdigest() not in keyhash):
                     raise ValueError("Keys don't match!")
                 return key
-                
+
     except FileNotFoundError:
         print("Decryption key (key.txt) not found!")
     except ValueError:
@@ -62,11 +62,14 @@ def updateGameIDs():
     gametabler = gametable.find_all('tr')
 
     cipher = AES.new(key, AES.MODE_ECB)
-    
+
     for row in gametabler[1:]:
-        titleid = row.contents[1].contents[0][1:]
-        gamename = row.contents[3].contents[0][1:-1]
-        region = row.contents[5].contents[0][1:-1]
+        try:
+            titleid = row.contents[1].contents[0][0:]
+            gamename = row.contents[3].contents[0][0:]
+            region = row.contents[5].contents[0][0:]
+        except IndexError: # At least one cell empty; ignore row
+            continue
 
         if ":" in gamename:
             gamename = gamename.replace(":", " -")
@@ -183,7 +186,7 @@ if len(screenshotlist) != 0:
 else:
     print('No screenshots found!')
 
-if len(videolist) != 0:  
+if len(videolist) != 0:
     print('\nOrganizing videos...')
     checkFolders(videolist)
 else:
