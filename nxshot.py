@@ -27,6 +27,12 @@ parser.add_argument(
     type=Path,
     help='"Nintendo/Album" folder from your SD card.')
 
+parser.add_argument('-l', 
+    '--local', 
+    action='store_true', 
+    help='Treat FILEPATH as a single folder of captures, instead of "Nintendo/Album/" structure')
+
+
 # If there are arguments, parse them. If not, exit
 args = parser.parse_args()
 
@@ -168,17 +174,16 @@ if not updated:
 
 albumfolder = args.filepath
 
+fpattern = '[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]/*'
+
+if args.local:
+    fpattern = '[0-9]' * 16 + '-' + '[0-9A-F]' * 32
+
 screenshotlist = sorted(
-        Path(albumfolder).glob(
-            '[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]/*.jpg'
-            )
-        )
+        Path(albumfolder).glob(fpattern + '.jpg'))
 
 videolist = sorted(
-        Path(albumfolder).glob(
-            '[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]/*.mp4'
-            )
-        )
+        Path(albumfolder).glob(fpattern + '.mp4'))
 
 if len(screenshotlist) != 0:
     print('Organizing screenshots...')
