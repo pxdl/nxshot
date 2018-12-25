@@ -32,6 +32,12 @@ parser.add_argument('-l',
     action='store_true', 
     help='Treat FILEPATH as a single folder of captures, instead of "Nintendo/Album/" structure')
 
+parser.add_argument('-o',
+    '--output',
+    metavar='outputfolder',
+    type=Path,
+    help='Path where "Organized" captures should be copied to. By default, output files to FILEPATH')
+
 
 # If there are arguments, parse them. If not, exit
 args = parser.parse_args()
@@ -141,7 +147,10 @@ def checkFolders(filelist):
 
         posixtimestamp = time.timestamp()
 
-        outputfolder = args.filepath.joinpath('Organized', checkID(gameid,idname))
+        if args.output is None:
+            outputfolder = args.filepath.joinpath('Organized', checkID(gameid,idname))
+        else:
+            outputfolder = args.output.joinpath('Organized', checkID(gameid,idname))
 
         outputfolder.mkdir(parents=True, exist_ok=True)
 
@@ -184,6 +193,12 @@ screenshotlist = sorted(
 
 videolist = sorted(
         Path(albumfolder).glob(fpattern + '.mp4'))
+
+print('Organized captures will be copied to:')
+if args.output is None:
+    print('\t', Path.absolute(args.filepath))
+else:
+    print('\t', Path.absolute(args.output))
 
 if len(screenshotlist) != 0:
     print('Organizing screenshots...')
