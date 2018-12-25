@@ -2,6 +2,7 @@ import sys
 import os
 import argparse
 import json
+import re
 from pathlib import Path
 from datetime import datetime
 from shutil import copy
@@ -31,6 +32,11 @@ parser.add_argument('-l',
     '--local', 
     action='store_true', 
     help='Treat FILEPATH as a single folder of captures, instead of "Nintendo/Album/" structure')
+
+parser.add_argument('-s',
+    '--supress-regions',
+    action='store_true',
+    help='Don\'t include game region in the folder\'s name')
 
 parser.add_argument('-o',
     '--output',
@@ -109,6 +115,8 @@ def updateGameIDs():
 
 def checkID(gameid, idname):
     if gameid in idname:
+        if args.supress_regions:
+            return re.sub(r' \((CHN|EUR|JPN|KOR|USA| )*\)$', '', idname[gameid])
         return idname[gameid]
     else:
         return 'Unknown'
