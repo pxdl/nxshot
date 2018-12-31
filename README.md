@@ -12,10 +12,11 @@ Automatically organize and timestamp your Nintendo Switch captures
 
 ## Usage
 
-``nxshot.py FILEPATH``
+``nxshot.py [-d] FILEPATH``
 
 Positional arguments:
 
+>      -d:    Use nswdb instead of switchbrrew for updating gameids 
 >FILEPATH:    "Nintendo/Album" folder from your SD card.
 
 ![image](https://user-images.githubusercontent.com/17756301/33006113-3f204800-cdb0-11e7-99f4-94790c01916d.png)
