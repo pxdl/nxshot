@@ -32,7 +32,7 @@ parser.add_argument('-d',
     '--download-nswdb',
     action='store_true',
     help='Download IDs from nswdb.com instead of switchbrew.org\n \
-          NOTE: Regions may not match')
+          NOTE: Regions may not match SwitchBrew')
 
 
 # If there are arguments, parse them. If not, exit
