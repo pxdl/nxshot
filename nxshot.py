@@ -65,9 +65,9 @@ def updateGameIDs():
 
     for row in gametabler[1:]:
         try:
-            titleid = row.contents[1].contents[0][0:]
-            gamename = row.contents[3].contents[0][0:]
-            region = row.contents[5].contents[0][0:]
+            titleid = row.contents[1].contents[0]
+            gamename = row.contents[3].contents[0]
+            region = row.contents[5].contents[0]
         except IndexError: # At least one cell empty; ignore row
             continue
 
