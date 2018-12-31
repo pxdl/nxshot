@@ -145,7 +145,8 @@ def checkFolders(filelist):
 
         current += 1
 
-        print('Organized {} of {} files.'.format(current, length))
+        print('Organized {} of {} files.\r'.format(current, length), end='')
+    print("")
 
 
 # Load game ids and their names from external file
