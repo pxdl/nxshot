@@ -5,17 +5,18 @@ import json
 from pathlib import Path
 from datetime import datetime
 from shutil import copy
+
 from Crypto.Cipher import AES
-from Crypto.Util import Padding
 import hashlib
+
 from urllib.request import urlopen, urlretrieve
 from urllib.error import URLError
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 
-keyhash = "24e0dc62a15c11d38b622162ea2b4383"
-updated = 0
-idname = {}
+KEY_HASH = "24e0dc62a15c11d38b622162ea2b4383"
+IS_UPDATED = 0
+ENCRYPTED_IDS = {}
 
 # Argument parser
 parser = argparse.ArgumentParser(
@@ -29,100 +30,103 @@ parser.add_argument(
     help='"Nintendo/Album" folder from your SD card.')
 
 parser.add_argument('-d',
-    '--download-nswdb',
-    action='store_true',
-    help='Download IDs from nswdb.com instead of switchbrew.org\n \
+                    '--download-nswdb',
+                    action='store_true',
+                    help='Download IDs from nswdb.com instead of switchbrew.org\n \
           NOTE: Regions may not match')
 
 # If there are arguments, parse them. If not, exit
 args = parser.parse_args()
 
 
-def loadKey(filename, keyhash):
+def load_key(file_name, KEY_HASH):
     try:
-        with open(filename, 'r') as keyfile:
-            keystring = keyfile.read(32)
-            key = bytes.fromhex(keystring)
-            if(hashlib.md5(key).hexdigest() not in keyhash):
+        with open(file_name, 'r') as key_file:
+            key_string = key_file.read(32)
+            key = bytes.fromhex(key_string)
+            if(hashlib.md5(key).hexdigest() not in KEY_HASH):
                 raise ValueError("Keys don't match!")
             return key
 
     except FileNotFoundError:
-        print("Decryption key (key.txt) not found!")
+        print("Encryption key (key.txt) not found!")
     except ValueError:
-        print("Decryption key (key.txt) doesn't match!")
+        print("Encryption key (key.txt) doesn't match!")
 
-def decryptTitleID(key, titleid):
-    cipher = AES.new(key, AES.MODE_ECB)
 
-    titleidb = bytes.fromhex(titleid)
-    titleidb = titleidb[7::-1]
-    conversion = titleidb.hex()
-    conversion = conversion.ljust(32, '0')
-    titleidb = bytes.fromhex(conversion)
-    encrypted = cipher.encrypt(titleidb)
-    screenshotid = encrypted.hex().upper()
+def encrypt_title_id(key, title_id):
+    key_cipher = AES.new(key, AES.MODE_ECB)
 
-    return screenshotid
+    title_id_bytes = bytearray.fromhex(title_id[:16])
+    title_id_bytes.reverse()
+    title_id_bytes = title_id_bytes.ljust(16, b'\0')  # Padding
 
-def updateGameIDs():
-    key = loadKey('key.txt', keyhash)
+    encrypted_title_id = key_cipher.encrypt(title_id_bytes)
+    screenshot_id = encrypted_title_id.hex().upper()
+
+    return screenshot_id
+
+
+def update_game_ids():
+    key = load_key('key.txt', KEY_HASH)
     if not key:
         return -1
 
     if args.download_nswdb:
-        updateNSWDB(key)
+        update_nswdb(key)
     else:
-        updateSwitchBrew(key)
+        update_switchbrew(key)
 
-    with open('gameids.json', 'w', encoding='utf-8') as idfile:
-            json.dump(idname, idfile, ensure_ascii=False, indent=4, sort_keys=True)
-            print("Successfully updated Game IDs")
+    with open('gameids.json', 'w', encoding='utf-8') as encrypted_ids_file:
+        json.dump(ENCRYPTED_IDS, encrypted_ids_file,
+                  ensure_ascii=False, indent=4, sort_keys=True)
+        print("Successfully IS_UPDATED Game IDs")
 
     return 1
 
-def updateSwitchBrew(key):
+
+def update_switchbrew(key):
     wiki = 'http://switchbrew.org/index.php?title=Title_list/Games'
     try:
-        wikipage = urlopen(wiki)
+        wiki_page = urlopen(wiki)
     except URLError:
         print("Could not update gameids!")
         return -1
 
-    wikisoup = BeautifulSoup(wikipage, 'html.parser')
-    gametable = wikisoup.find('table', {"class": "wikitable sortable"})
-    gametabler = gametable.find_all('tr')
+    wiki_soup = BeautifulSoup(wiki_page, 'html.parser')
+    game_table = wiki_soup.find('table', {"class": "wikitable sortable"})
+    game_table_rows = game_table.find_all('tr')
 
-    for row in gametabler[1:]:
+    for row in game_table_rows[1:]:
         try:
-            titleid = str(row.contents[1].string)
-            gamename = str(row.contents[3].string)
+            title_id = str(row.contents[1].string)
+            game_name = str(row.contents[3].string)
             region = str(row.contents[5].string)
         except IndexError:  # At least one cell empty; ignore row
             continue
 
-        if titleid == 'None' or gamename == 'None' or region == 'None':
+        if title_id == 'None' or game_name == 'None' or region == 'None':
             continue
 
-        if ":" in gamename:
-            gamename = gamename.replace(":", " -")
+        if ":" in game_name:
+            game_name = game_name.replace(":", " -")
 
-        #print('TitleID = {}'.format(titleid))
+        #print('TitleID = {}'.format(title_id))
 
-        screenshotid = decryptTitleID(key, titleid)
+        screenshot_id = encrypt_title_id(key, title_id)
 
         #print("ScreenshotID = {}".format(encrypted.hex()))
-        idname[screenshotid] = gamename + ' (' + region + ')'
+        ENCRYPTED_IDS[screenshot_id] = game_name + ' (' + region + ')'
 
 
-def updateNSWDB(key):
+def update_nswdb(key):
     urlretrieve('http://nswdb.com/xml.php', 'db.xml')
     tree = ET.parse('db.xml')
     root = tree.getroot()
 
     for release in root.findall('release'):
         try:
-            screenshotid = decryptTitleID(key, release.find('titleid').text)
+            screenshot_id = encrypt_title_id(key, release.find('titleid').text)
 
             region = release.find('region').text
             if region == "WLD":
@@ -133,30 +137,30 @@ def updateNSWDB(key):
         except ValueError:
             continue
 
-        idname[screenshotid] = name + ' (' + region + ')'
+        ENCRYPTED_IDS[screenshot_id] = name + ' (' + region + ')'
 
     os.remove("db.xml")
 
 
-def checkID(gameid, idname):
-    if gameid in idname:
-        return idname[gameid]
+def check_id(game_id, ENCRYPTED_IDS):
+    if game_id in ENCRYPTED_IDS:
+        return ENCRYPTED_IDS[game_id]
     else:
         return 'Unknown'
 
 
-def checkFolders(filelist):
+def check_folders(file_list):
     current = 0
-    length = len(filelist)
-    # print(filelist)
-    for mediapath in filelist:
-        year = mediapath.stem[0:4]
-        month = mediapath.stem[4:6]
-        day = mediapath.stem[6:8]
-        hour = mediapath.stem[8:10]
-        minute = mediapath.stem[10:12]
-        second = mediapath.stem[12:14]
-        gameid = mediapath.stem[17:]
+    length = len(file_list)
+    # print(file_list)
+    for media_path in file_list:
+        year = media_path.stem[0:4]
+        month = media_path.stem[4:6]
+        day = media_path.stem[6:8]
+        hour = media_path.stem[8:10]
+        minute = media_path.stem[10:12]
+        second = media_path.stem[12:14]
+        game_id = media_path.stem[17:]
 
         try:
             time = datetime(
@@ -171,21 +175,21 @@ def checkFolders(filelist):
             print(
                 'Invalid filename for media {}: {}'.format(
                     current,
-                    str(mediapath.stem)
+                    str(media_path.stem)
                 )
             )
             continue
 
-        posixtimestamp = time.timestamp()
+        posix_timestamp = time.timestamp()
 
-        outputfolder = args.filepath.joinpath(
-            'Organized', checkID(gameid, idname))
+        output_folder = args.filepath.joinpath(
+            'Organized', check_id(game_id, ENCRYPTED_IDS))
 
-        outputfolder.mkdir(parents=True, exist_ok=True)
+        output_folder.mkdir(parents=True, exist_ok=True)
 
-        newfile = copy(str(mediapath), str(outputfolder))
+        new_file = copy(str(media_path), str(output_folder))
 
-        os.utime(newfile, (posixtimestamp, posixtimestamp))
+        os.utime(new_file, (posix_timestamp, posix_timestamp))
 
         current += 1
 
@@ -195,45 +199,45 @@ def checkFolders(filelist):
 
 # Load game ids and their names from external file
 try:
-    with open('gameids.json', 'r', encoding='utf-8') as idfile:
-        idname = json.load(idfile)
+    with open('gameids.json', 'r', encoding='utf-8') as encrypted_ids_file:
+        ENCRYPTED_IDS = json.load(encrypted_ids_file)
 except FileNotFoundError:
     print('Game ID list (gameids.json) not found! Fetching from Switchbrew...')
-    updated = updateGameIDs()
-    if updated < 0:
+    IS_UPDATED = update_game_ids()
+    if IS_UPDATED < 0:
         sys.exit()
 except json.decoder.JSONDecodeError:
     print('Invalid JSON format! Fetching from Switchbrew...')
-    updated = updateGameIDs()
-    if updated < 0:
+    IS_UPDATED = update_game_ids()
+    if IS_UPDATED < 0:
         sys.exit()
 
-if not updated:
-    updateGameIDs()
+if not IS_UPDATED:
+    update_game_ids()
 
-albumfolder = args.filepath
+album_folder = args.filepath
 
-screenshotlist = sorted(
-    Path(albumfolder).glob(
+screenshot_list = sorted(
+    Path(album_folder).glob(
         '[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]/*.jpg'
     )
 )
 
-videolist = sorted(
-    Path(albumfolder).glob(
+video_list = sorted(
+    Path(album_folder).glob(
         '[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]/*.mp4'
     )
 )
 
-if len(screenshotlist) != 0:
+if len(screenshot_list) != 0:
     print('Organizing screenshots...')
-    checkFolders(screenshotlist)
+    check_folders(screenshot_list)
 else:
     print('No screenshots found!')
 
-if len(videolist) != 0:
+if len(video_list) != 0:
     print('\nOrganizing videos...')
-    checkFolders(videolist)
+    check_folders(video_list)
 else:
     print('\nNo videos found!')
 
