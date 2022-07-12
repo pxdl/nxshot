@@ -1,2 +1,6 @@
 .vscode
 key.txt
+__pycache__
+Album
+venv
+virtualenv
