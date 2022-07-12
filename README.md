@@ -1,6 +1,6 @@
 # nxshot
 Automatically organize and timestamp your Nintendo Switch captures
-![image](https://user-images.githubusercontent.com/17756301/33006063-0c36d2ce-cdb0-11e7-8875-1044eab6527a.png)
+<img width="801" alt="image" src="https://user-images.githubusercontent.com/17756301/178522830-a8979460-c4aa-43d0-ad52-38d3efabe11d.png">
 
 ## Requirements
 This package requires pycryptodome and BeautifulSoup4.
@@ -23,7 +23,8 @@ optional arguments:
     -d, --download-nswdb             Download IDs from nswdb.com instead of switchbrew.org
                                      NOTE: Regions may not match SwitchBrew
 
-![image](https://user-images.githubusercontent.com/17756301/33006113-3f204800-cdb0-11e7-99f4-94790c01916d.png)
+<img width="762" alt="image" src="https://user-images.githubusercontent.com/17756301/178527336-c2518069-2aa0-459d-945c-dd7ad6237f32.png">
+
 
 Organized and tagged files are copied to ``../Nintendo/Album/Organized`` in a folder with the game's name.
 
