@@ -32,4 +32,4 @@ The list is automatically updated from [SwitchBrew](http://switchbrew.org/index.
           
 ## Help
 
-If you have any questions, feel free to send me a tweet [**@Some1CP**](https://twitter.com/Some1CP).
+If you have any questions, feel free to send me a tweet [**@s1cp_**](https://twitter.com/s1cp_).
