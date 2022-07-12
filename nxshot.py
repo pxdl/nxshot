@@ -80,7 +80,7 @@ def update_game_ids():
     with open('gameids.json', 'w', encoding='utf-8') as encrypted_ids_file:
         json.dump(ENCRYPTED_IDS, encrypted_ids_file,
                   ensure_ascii=False, indent=4, sort_keys=True)
-        print("Successfully IS_UPDATED Game IDs")
+        print("Successfully updated Game IDs")
 
     return 1
 
