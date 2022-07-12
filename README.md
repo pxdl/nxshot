@@ -2,8 +2,6 @@
 Automatically organize and timestamp your Nintendo Switch captures
 ![image](https://user-images.githubusercontent.com/17756301/33006063-0c36d2ce-cdb0-11e7-8875-1044eab6527a.png)
 
-# !!! This Project has been deprecated in favor of [Switcheroo](https://github.com/Tyler-A/Switcheroo) / [Switcheroo Lite](https://github.com/dmynerd78/switcheroo-lite) !!!
-
 ## Requirements
 This package requires pycryptodome and BeautifulSoup4.
 You can install them by running
