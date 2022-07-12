@@ -30,14 +30,15 @@ parser.add_argument(
 # If there are arguments, parse them. If not, exit
 args = parser.parse_args()
 
+
 def loadKey(filename, keyhash):
     try:
         with open(filename, 'r') as keyfile:
-                keystring = keyfile.read(32)
-                key = bytes.fromhex(keystring)
-                if(hashlib.md5(key).hexdigest() not in keyhash):
-                    raise ValueError("Keys don't match!")
-                return key
+            keystring = keyfile.read(32)
+            key = bytes.fromhex(keystring)
+            if(hashlib.md5(key).hexdigest() not in keyhash):
+                raise ValueError("Keys don't match!")
+            return key
 
     except FileNotFoundError:
         print("Decryption key (key.txt) not found!")
@@ -58,17 +59,20 @@ def updateGameIDs():
         return -1
 
     wikisoup = BeautifulSoup(wikipage, 'html.parser')
-    gametable = wikisoup.find('table', {"class" : "wikitable sortable" })
+    gametable = wikisoup.find('table', {"class": "wikitable sortable"})
     gametabler = gametable.find_all('tr')
 
     cipher = AES.new(key, AES.MODE_ECB)
 
     for row in gametabler[1:]:
         try:
-            titleid = row.contents[1].contents[0][0:]
-            gamename = row.contents[3].contents[0][0:]
-            region = row.contents[5].contents[0][0:]
-        except IndexError: # At least one cell empty; ignore row
+            titleid = str(row.contents[1].string)
+            gamename = str(row.contents[3].string)
+            region = str(row.contents[5].string)
+        except IndexError:  # At least one cell empty; ignore row
+            continue
+
+        if titleid == 'None' or gamename == 'None' or region == 'None':
             continue
 
         if ":" in gamename:
@@ -88,11 +92,10 @@ def updateGameIDs():
         idname[screenshotid] = gamename + ' (' + region + ')'
 
     with open('gameids.json', 'w', encoding='utf-8') as idfile:
-            json.dump(idname, idfile, ensure_ascii=False, indent=4, sort_keys=True)
-            print("Successfully updated Game IDs")
+        json.dump(idname, idfile, ensure_ascii=False, indent=4, sort_keys=True)
+        print("Successfully updated Game IDs")
 
     return 1
-
 
 
 def checkID(gameid, idname):
@@ -105,7 +108,7 @@ def checkID(gameid, idname):
 def checkFolders(filelist):
     current = 0
     length = len(filelist)
-    #print(filelist)
+    # print(filelist)
     for mediapath in filelist:
         year = mediapath.stem[0:4]
         month = mediapath.stem[4:6]
@@ -117,25 +120,26 @@ def checkFolders(filelist):
 
         try:
             time = datetime(
-                            int(year),
-                            int(month),
-                            int(day),
-                            hour=int(hour),
-                            minute=int(minute),
-                            second=int(second))
+                int(year),
+                int(month),
+                int(day),
+                hour=int(hour),
+                minute=int(minute),
+                second=int(second))
             pass
         except ValueError:
             print(
                 'Invalid filename for media {}: {}'.format(
-                                                        current,
-                                                        str(mediapath.stem)
-                                                        )
+                    current,
+                    str(mediapath.stem)
                 )
+            )
             continue
 
         posixtimestamp = time.timestamp()
 
-        outputfolder = args.filepath.joinpath('Organized', checkID(gameid,idname))
+        outputfolder = args.filepath.joinpath(
+            'Organized', checkID(gameid, idname))
 
         outputfolder.mkdir(parents=True, exist_ok=True)
 
@@ -151,7 +155,7 @@ def checkFolders(filelist):
 # Load game ids and their names from external file
 try:
     with open('gameids.json', 'r', encoding='utf-8') as idfile:
-            idname = json.load(idfile)
+        idname = json.load(idfile)
 except FileNotFoundError:
     print('Game ID list (gameids.json) not found! Fetching from Switchbrew...')
     updated = updateGameIDs()
@@ -169,16 +173,16 @@ if not updated:
 albumfolder = args.filepath
 
 screenshotlist = sorted(
-        Path(albumfolder).glob(
-            '[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]/*.jpg'
-            )
-        )
+    Path(albumfolder).glob(
+        '[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]/*.jpg'
+    )
+)
 
 videolist = sorted(
-        Path(albumfolder).glob(
-            '[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]/*.mp4'
-            )
-        )
+    Path(albumfolder).glob(
+        '[0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]/*.mp4'
+    )
+)
 
 if len(screenshotlist) != 0:
     print('Organizing screenshots...')
